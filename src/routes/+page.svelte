@@ -1,32 +1,57 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import type { Photo } from '$lib/server/db/schema';
 
 	let { data }: { data: PageData } = $props();
 
 	let uploading = $state(false);
-	let photos = $state<Photo[]>([]);
 	let error = $state('');
 	let success = $state('');
+	let isDragging = $state(false);
 
 	let selectedFile = $state<File | null>(null);
+	let previewUrl = $state<string | null>(null);
 	let age = $state('');
 	let gender = $state('');
 	let symptoms = $state('');
 	let other = $state('');
 
-	$effect(() => {
-		loadPhotos();
-	});
+	function handleFileSelect(file: File) {
+		selectedFile = file;
+		const reader = new FileReader();
+		reader.onload = (e) => {
+			previewUrl = e.target?.result as string;
+		};
+		reader.readAsDataURL(file);
+	}
 
-	async function loadPhotos() {
-		try {
-			const response = await fetch('/api/photos');
-			const data = await response.json();
-			photos = data.photos || [];
-		} catch (err) {
-			console.error('Failed to load photos:', err);
+	function handleDragOver(e: DragEvent) {
+		e.preventDefault();
+		isDragging = true;
+	}
+
+	function handleDragLeave(e: DragEvent) {
+		e.preventDefault();
+		isDragging = false;
+	}
+
+	function handleDrop(e: DragEvent) {
+		e.preventDefault();
+		isDragging = false;
+
+		const files = e.dataTransfer?.files;
+		if (files && files.length > 0) {
+			const file = files[0];
+			if (file.type.startsWith('image/')) {
+				handleFileSelect(file);
+			} else {
+				error = 'Please select an image file';
+			}
 		}
+	}
+
+	function triggerFileInput() {
+		const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+		if (fileInput) fileInput.click();
 	}
 
 	async function handleSubmit(e: SubmitEvent) {
@@ -73,6 +98,7 @@
 
 			success = 'Photo uploaded successfully!';
 			selectedFile = null;
+			previewUrl = null;
 			age = '';
 			gender = '';
 			symptoms = '';
@@ -81,34 +107,11 @@
 			// Reset file input
 			const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
 			if (fileInput) fileInput.value = '';
-
-			await loadPhotos();
 		} catch (err) {
 			error = 'Upload failed. Please try again.';
 			console.error(err);
 		} finally {
 			uploading = false;
-		}
-	}
-
-	async function deletePhoto(id: number) {
-		if (!confirm('Are you sure you want to delete this photo?')) return;
-
-		try {
-			const response = await fetch(`/api/photos/${id}`, {
-				method: 'DELETE'
-			});
-
-			if (!response.ok) {
-				const result = await response.json();
-				alert(result.error || 'Delete failed');
-				return;
-			}
-
-			await loadPhotos();
-		} catch (err) {
-			alert('Delete failed. Please try again.');
-			console.error(err);
 		}
 	}
 </script>
@@ -118,9 +121,11 @@
 	<nav class="bg-white shadow-sm border-b border-neutral-100 sticky top-0 z-50 backdrop-blur-header">
 		<div class="container">
 			<div class="flex justify-between items-center h-16">
-				<h1 class="text-2xl font-bold text-gradient">AuraCare</h1>
+				<a href="/" class="text-2xl font-bold text-gradient hover:opacity-80 transition-opacity">
+					AuraCare
+				</a>
 				<div class="flex items-center gap-6">
-					<div class="flex items-center gap-3">
+					<a href="/account" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
 						<div class="w-10 h-10 rounded-full gradient-healthcare flex items-center justify-center text-white font-semibold">
 							{data.user.username.charAt(0).toUpperCase()}
 						</div>
@@ -128,7 +133,7 @@
 							<p class="text-sm font-medium text-neutral-900">{data.user.username}</p>
 							<p class="text-xs text-neutral-500">Healthcare Provider</p>
 						</div>
-					</div>
+					</a>
 					<form method="post" action="/logout">
 						<button type="submit" class="btn btn-secondary text-sm">
 							Logout
@@ -162,7 +167,8 @@
 								required
 								onchange={(e) => {
 									const target = e.target as HTMLInputElement;
-									selectedFile = target.files?.[0] || null;
+									const file = target.files?.[0];
+									if (file) handleFileSelect(file);
 								}}
 								class="block w-full text-sm text-neutral-600 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-healthcare-50 file:text-healthcare-700 hover:file:bg-healthcare-100 file:cursor-pointer border border-neutral-200 rounded-lg"
 							/>
@@ -256,74 +262,96 @@
 				</div>
 			</div>
 
-			<!-- Photos Gallery -->
+			<!-- Photo Preview / Drop Zone -->
 			<div>
 				<div class="card p-6">
-					<div class="mb-6 flex justify-between items-center">
-						<div>
-							<h2 class="text-2xl font-bold text-neutral-900 mb-1">Your Uploads</h2>
-							<p class="text-neutral-600 text-sm">{photos.length} photo{photos.length !== 1 ? 's' : ''} uploaded</p>
-						</div>
+					<div class="mb-6">
+						<h2 class="text-2xl font-bold text-neutral-900 mb-1">Photo Preview</h2>
+						<p class="text-neutral-600 text-sm">Preview your selected image</p>
 					</div>
 
-					{#if photos.length === 0}
-						<div class="text-center py-12">
-							<div class="w-16 h-16 bg-healthcare-50 rounded-full flex items-center justify-center mx-auto mb-4">
-								<svg class="w-8 h-8 text-healthcare-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-								</svg>
+					{#if previewUrl}
+						<!-- Photo Preview -->
+						<div class="space-y-4">
+							<div class="relative group">
+								<img
+									src={previewUrl}
+									alt="Preview of selected medical photo"
+									class="w-full h-96 object-cover rounded-lg border-2 border-neutral-200"
+								/>
+								<button
+									type="button"
+									aria-label="Remove selected photo"
+									onclick={() => {
+										selectedFile = null;
+										previewUrl = null;
+										const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+										if (fileInput) fileInput.value = '';
+									}}
+									class="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+								>
+									<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+									</svg>
+								</button>
 							</div>
-							<p class="text-neutral-500 text-sm">No photos uploaded yet</p>
-							<p class="text-neutral-400 text-xs mt-1">Upload your first medical photo to get started</p>
+							<div class="text-center">
+								<p class="text-sm text-neutral-600">File: {selectedFile?.name}</p>
+								<p class="text-xs text-neutral-500">Size: {(selectedFile?.size || 0 / 1024 / 1024).toFixed(2)} MB</p>
+							</div>
 						</div>
 					{:else}
-						<div class="space-y-4 max-h-[calc(100vh-250px)] overflow-y-auto pr-2">
-							{#each photos as photo}
-								<div class="border border-neutral-200 rounded-lg p-4 hover:border-primary-300 transition-colors bg-white">
-									<img
-										src={photo.imageUrl}
-										alt="Medical photo for {photo.gender}, age {photo.age}"
-										class="w-full h-48 object-cover rounded-lg mb-3"
-									/>
-									<div class="space-y-2 text-sm">
-										<div class="flex gap-4">
-											<div class="flex-1">
-												<span class="text-neutral-500">Age:</span>
-												<span class="ml-2 font-medium text-neutral-900">{photo.age}</span>
-											</div>
-											<div class="flex-1">
-												<span class="text-neutral-500">Gender:</span>
-												<span class="ml-2 font-medium text-neutral-900 capitalize">{photo.gender}</span>
-											</div>
-										</div>
-										<div>
-											<span class="text-neutral-500">Symptoms:</span>
-											<div class="flex flex-wrap gap-1 mt-1">
-												{#each photo.symptoms as symptom}
-													<span class="px-2 py-1 bg-healthcare-50 text-healthcare-700 rounded-md text-xs font-medium">
-														{symptom}
-													</span>
-												{/each}
-											</div>
-										</div>
-										{#if photo.other}
-											<div>
-												<span class="text-neutral-500">Notes:</span>
-												<p class="mt-1 text-neutral-700 text-xs bg-neutral-50 p-2 rounded">{photo.other}</p>
-											</div>
-										{/if}
-										<div class="text-xs text-neutral-400 pt-2 border-t border-neutral-100">
-											Uploaded: {new Date(photo.uploadedAt).toLocaleString()}
-										</div>
-									</div>
-									<button
-										onclick={() => deletePhoto(photo.id)}
-										class="mt-3 w-full py-2 px-3 bg-red-50 text-red-700 hover:bg-red-100 rounded-lg text-sm font-medium transition-colors"
-									>
-										Delete Photo
-									</button>
+						<!-- Drop Zone -->
+						<div
+							role="button"
+							tabindex="0"
+							onclick={triggerFileInput}
+							onkeydown={(e) => {
+								if (e.key === 'Enter' || e.key === ' ') {
+									e.preventDefault();
+									triggerFileInput();
+								}
+							}}
+							ondragover={handleDragOver}
+							ondragleave={handleDragLeave}
+							ondrop={handleDrop}
+							class="border-2 border-dashed rounded-lg p-12 text-center transition-colors cursor-pointer {isDragging
+								? 'border-primary-500 bg-primary-50'
+								: 'border-neutral-300 bg-neutral-50 hover:border-primary-400 hover:bg-primary-50'}"
+						>
+							<div class="space-y-4">
+								<div class="w-16 h-16 bg-healthcare-50 rounded-full flex items-center justify-center mx-auto">
+									<svg class="w-8 h-8 text-healthcare-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+										/>
+									</svg>
 								</div>
-							{/each}
+								<div>
+									<p class="text-lg font-medium text-neutral-900">Drop your photo here</p>
+									<p class="text-sm text-neutral-500 mt-1">or click to browse</p>
+								</div>
+								<div class="text-xs text-neutral-400">
+									<p>PNG, JPG, or JPEG</p>
+									<p>Maximum file size: 10MB</p>
+								</div>
+								<button
+									type="button"
+									onclick={(e) => {
+										e.stopPropagation();
+										triggerFileInput();
+									}}
+									class="btn btn-healthcare inline-flex items-center gap-2"
+								>
+									<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+									</svg>
+									Browse Files
+								</button>
+							</div>
 						</div>
 					{/if}
 				</div>
