@@ -1,0 +1,45 @@
+name: auracare-upload
+region: lon
+
+services:
+  - name: web
+    github:
+      branch: main
+      deploy_on_push: true
+    build_command: yarn build
+    run_command: yarn start
+    environment_slug: node-js
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    http_port: 8080
+    routes:
+      - path: /
+    health_check:
+      http_path: /
+      initial_delay_seconds: 60
+      period_seconds: 10
+      timeout_seconds: 5
+      success_threshold: 1
+      failure_threshold: 3
+    envs:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "8080"
+      - key: HOST
+        value: "0.0.0.0"
+      - key: DATABASE_URL
+        type: SECRET
+        scope: RUN_TIME
+      - key: DO_SPACES_KEY
+        type: SECRET
+        scope: RUN_TIME
+      - key: DO_SPACES_SECRET
+        type: SECRET
+        scope: RUN_TIME
+      - key: DO_SPACES_ENDPOINT
+        value: "https://lon1.digitaloceanspaces.com"
+      - key: DO_SPACES_REGION
+        value: "lon1"
+      - key: DO_SPACES_BUCKET
+        value: "auracare"

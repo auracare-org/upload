@@ -212,6 +212,69 @@ Files are uploaded with:
 
 ## Production Deployment
 
+### Deploying to DigitalOcean App Platform
+
+The application includes configuration files for easy deployment to DigitalOcean App Platform:
+
+**1. Prerequisites**
+- GitHub repository with your code
+- DigitalOcean account
+- PostgreSQL database (can use DO Managed Database)
+- DigitalOcean Spaces bucket
+
+**2. Configure Environment Variables**
+
+In the DigitalOcean App Platform dashboard, set these environment variables:
+
+```
+DATABASE_URL=postgres://user:password@host:port/db-name
+DO_SPACES_KEY=your-spaces-access-key
+DO_SPACES_SECRET=your-spaces-secret-key
+DO_SPACES_ENDPOINT=https://lon1.digitaloceanspaces.com
+DO_SPACES_REGION=lon1
+DO_SPACES_BUCKET=auracare
+NODE_ENV=production
+PORT=8080
+HOST=0.0.0.0
+```
+
+**3. Deploy via App Spec (Recommended)**
+
+The `.do/app.yaml` file contains the complete app specification. In DigitalOcean:
+
+1. Create a new App
+2. Connect your GitHub repository
+3. Choose "Edit your App Spec"
+4. Paste the contents of `.do/app.yaml`
+5. Update the `github` section with your repository details
+6. Add your secret environment variables (DATABASE_URL, etc.)
+7. Click "Create Resources"
+
+**4. Manual Deployment**
+
+Alternatively, configure manually:
+- **Build Command**: `yarn build`
+- **Run Command**: `yarn start` or `node build/index.js`
+- **Port**: 8080
+- **Health Check**: HTTP path `/` with 60s initial delay
+
+**5. Database Migration**
+
+After deployment, run migrations using the App Platform console:
+
+```sh
+yarn db:push
+```
+
+Or use the DigitalOcean CLI:
+```sh
+doctl apps create-deployment <app-id> --wait
+```
+
+### Other Platforms
+
+For other hosting platforms (Heroku, Railway, etc.):
+
 1. Build the application:
 ```sh
 yarn build
@@ -224,9 +287,11 @@ yarn build
 yarn db:push
 ```
 
-4. Start the production server (adapter: Node.js):
+4. Start the production server:
 ```sh
-node build
+yarn start
 ```
+
+The `Procfile` is included for Heroku-compatible platforms.
 
 
