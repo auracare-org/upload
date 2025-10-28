@@ -182,6 +182,10 @@
 										<span class="ml-2 font-medium text-neutral-900 capitalize">{photo.gender}</span>
 									</div>
 								</div>
+								<div class="text-sm">
+									<span class="text-neutral-500">Ear:</span>
+									<span class="ml-2 font-medium text-neutral-900 capitalize">{photo.ear}</span>
+								</div>
 								<div>
 									<span class="text-sm text-neutral-500">Symptoms:</span>
 									<div class="flex flex-wrap gap-1 mt-2">

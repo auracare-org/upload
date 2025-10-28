@@ -10,7 +10,8 @@ const config = {
 		adapter: adapter({
 			out: 'build',
 			precompress: false,
-			envPrefix: ''
+			envPrefix: '',
+			bodyMaxLength: 10485760 // 10 MB limit for file uploads
 		})
 	}
 };
