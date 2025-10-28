@@ -20,6 +20,7 @@ export const photo = pgTable('photo', {
 	imageUrl: text('image_url').notNull(),
 	age: integer('age').notNull(),
 	gender: text('gender').notNull(),
+	ear: text('ear').notNull(),
 	symptoms: text('symptoms').array().notNull(),
 	other: text('other'),
 	uploadedAt: timestamp('uploaded_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow()

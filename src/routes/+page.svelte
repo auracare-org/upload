@@ -12,6 +12,7 @@
 	let previewUrl = $state<string | null>(null);
 	let age = $state('');
 	let gender = $state('');
+	let ear = $state('');
 	let symptoms = $state('');
 	let other = $state('');
 
@@ -80,6 +81,7 @@
 		formData.append('file', selectedFile);
 		formData.append('age', age);
 		formData.append('gender', gender);
+		formData.append('ear', ear);
 		formData.append('symptoms', JSON.stringify(symptomsArray));
 		if (other) formData.append('other', other);
 
@@ -101,6 +103,7 @@
 			previewUrl = null;
 			age = '';
 			gender = '';
+			ear = '';
 			symptoms = '';
 			other = '';
 
@@ -211,6 +214,22 @@
 						</div>
 
 						<div>
+							<label for="ear" class="block text-sm font-medium text-neutral-700 mb-2">
+								Ear
+							</label>
+							<select
+								id="ear"
+								bind:value={ear}
+								required
+								class="w-full px-4 py-2.5 bg-white border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+							>
+								<option value="">Select</option>
+								<option value="left">Left Ear</option>
+								<option value="right">Right Ear</option>
+							</select>
+						</div>
+
+						<div>
 							<label for="symptoms" class="block text-sm font-medium text-neutral-700 mb-2">
 								Symptoms
 							</label>
@@ -297,7 +316,7 @@
 							</div>
 							<div class="text-center">
 								<p class="text-sm text-neutral-600">File: {selectedFile?.name}</p>
-								<p class="text-xs text-neutral-500">Size: {(selectedFile?.size || 0 / 1024 / 1024).toFixed(2)} MB</p>
+								<p class="text-xs text-neutral-500">Size: {((selectedFile?.size || 0) / 1024 / 1024).toFixed(2)} MB</p>
 							</div>
 						</div>
 					{:else}

@@ -13,6 +13,7 @@ export const POST: RequestHandler = async (event) => {
 	const file = formData.get('file') as File | null;
 	const age = formData.get('age') as string | null;
 	const gender = formData.get('gender') as string | null;
+	const ear = formData.get('ear') as string | null;
 	const symptomsRaw = formData.get('symptoms') as string | null;
 	const other = formData.get('other') as string | null;
 
@@ -27,6 +28,10 @@ export const POST: RequestHandler = async (event) => {
 
 	if (!gender) {
 		return json({ error: 'Gender is required' }, { status: 400 });
+	}
+
+	if (!ear) {
+		return json({ error: 'Ear is required' }, { status: 400 });
 	}
 
 	if (!symptomsRaw) {
@@ -62,6 +67,7 @@ export const POST: RequestHandler = async (event) => {
 				imageUrl,
 				age: parseInt(age),
 				gender,
+				ear,
 				symptoms,
 				other: other || null
 			})
