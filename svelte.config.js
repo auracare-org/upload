@@ -11,7 +11,7 @@ const config = {
 			out: 'build',
 			precompress: false,
 			envPrefix: '',
-			bodyMaxLength: 10485760 // 10 MB limit for file uploads
+			bodyMaxLength: 1073741824 // 1 GB limit for file uploads
 		})
 	}
 };

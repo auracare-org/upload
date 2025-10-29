@@ -175,7 +175,7 @@
 								}}
 								class="block w-full text-sm text-neutral-600 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-healthcare-50 file:text-healthcare-700 hover:file:bg-healthcare-100 file:cursor-pointer border border-neutral-200 rounded-lg"
 							/>
-							<p class="text-xs text-neutral-500 mt-1">PNG, JPG, or JPEG (max 10MB)</p>
+							<p class="text-xs text-neutral-500 mt-1">PNG, JPG, or JPEG (max 1GB)</p>
 						</div>
 
 						<div class="grid grid-cols-2 gap-4">
@@ -355,7 +355,7 @@
 								</div>
 								<div class="text-xs text-neutral-400">
 									<p>PNG, JPG, or JPEG</p>
-									<p>Maximum file size: 10MB</p>
+									<p>Maximum file size: 1GB</p>
 								</div>
 								<button
 									type="button"

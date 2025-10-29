@@ -3,6 +3,33 @@
 	import type { ActionData } from './$types';
 
 	let { form }: { form: ActionData } = $props();
+
+	let username = $state('');
+	let usernameError = $state('');
+
+	function validateUsernameInput() {
+		if (username.length === 0) {
+			usernameError = '';
+			return;
+		}
+
+		if (username.length < 3) {
+			usernameError = 'Username must be at least 3 characters';
+			return;
+		}
+
+		if (username.length > 31) {
+			usernameError = 'Username must be no more than 31 characters';
+			return;
+		}
+
+		if (!/^[a-z0-9_-]+$/.test(username)) {
+			usernameError = 'Username must be lowercase alphanumeric only (no spaces, no uppercase)';
+			return;
+		}
+
+		usernameError = '';
+	}
 </script>
 
 <div class="min-h-screen flex items-center justify-center gradient-bg px-4 py-12">
@@ -23,10 +50,19 @@
 						name="username"
 						type="text"
 						required
-						class="w-full px-4 py-3 bg-white border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+						bind:value={username}
+						oninput={validateUsernameInput}
+						pattern="[a-z0-9_-]{3,31}"
+						class="w-full px-4 py-3 bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+						class:border-red-300={usernameError}
+						class:border-neutral-200={!usernameError}
 						placeholder="Choose a username"
 					/>
-					<p class="text-xs text-neutral-500 mt-1">3-31 characters, lowercase alphanumeric</p>
+					{#if usernameError}
+						<p class="text-xs text-red-600 mt-1">{usernameError}</p>
+					{:else}
+						<p class="text-xs text-neutral-500 mt-1">3-31 characters, lowercase alphanumeric, no spaces</p>
+					{/if}
 				</div>
 
 				<div>
